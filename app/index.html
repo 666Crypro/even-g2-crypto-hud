@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+    <title>Heads-Up Desk</title>
+    <style>
+      html, body { margin: 0; background: #232323; color: #e5e5e5; font: 14px/1.45 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; touch-action: manipulation; -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
+      main { padding: 16px; max-width: 520px; margin: 0 auto; }
+      h1 { font-size: 18px; margin: 4px 0 2px; letter-spacing: .5px; }
+      .sub { color: #9a9a9a; font-size: 12px; margin-bottom: 12px; }
+      .chip { display: inline-block; border: 1px solid #555; border-radius: 999px; padding: 2px 8px; margin: 0 6px 6px 0; font-size: 11px; color: #bbb; }
+      .chip.ok { border-color: #39d353; color: #39d353; }
+      .chip.warn { border-color: #e3b341; color: #e3b341; }
+      pre#mirror { background: #000; color: #39d353; font: 12px/1.35 ui-monospace, Menlo, monospace; padding: 10px; border-radius: 8px; white-space: pre-wrap; min-height: 150px; margin: 8px 0; }
+      #mode { color: #888; font-size: 11px; }
+      section { background: #2c2c2c; border-radius: 10px; padding: 12px; margin: 12px 0; }
+      label { display: block; font-size: 12px; color: #aaa; margin: 8px 0 3px; }
+      input { width: 100%; box-sizing: border-box; background: #1b1b1b; border: 1px solid #444; color: #eee; border-radius: 6px; padding: 8px; font-size: 14px; }
+      button { background: #39d353; color: #000; border: 0; border-radius: 6px; padding: 8px 12px; font-weight: 600; margin-top: 8px; }
+      .pad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+      .pad button { background: #3a3a3a; color: #ddd; margin: 0; }
+      ul#log { margin: 6px 0 0; padding-left: 16px; color: #aaa; font-size: 12px; }
+      code { color: #39d353; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>👓 Heads-Up Desk</h1>
+      <div class="sub">Glanceable crypto HUD for Even G2 · Hyperliquid · Polymarket · Telegram · Trust Wallet. Read-only data, paper/testnet actions.</div>
+      <div id="chips"></div>
+      <pre id="mirror">connecting…</pre>
+      <div id="mode"></div>
+
+      <section>
+        <form id="cmd">
+          <label>Type a command (same pipeline as push-to-talk)</label>
+          <input name="text" placeholder='alert bitcoin above 60k · long eth 200 · bet yes 20 · reply on it' autocomplete="off" />
+        </form>
+        <div class="pad" style="margin-top:8px">
+          <button data-gesture="prev">▲ prev</button><button data-gesture="next">▼ next</button><button data-gesture="tap">tap</button><button data-gesture="back">back</button>
+        </div>
+      </section>
+
+      <section>
+        <form id="prefs">
+          <label>Watchlist (Hyperliquid perps, first = focus)</label>
+          <input name="watch" placeholder="BTC,ETH,SOL,HYPE" />
+          <label>Hyperliquid address to watch (read-only)</label>
+          <input name="hl" placeholder="0x…" />
+          <label>Wallet address, e.g. your Trust Wallet (read-only balances, Ethereum + Base)</label>
+          <input name="wallet" placeholder="0x…" />
+          <button type="submit">Save</button>
+        </form>
+      </section>
+
+      <section>
+        <b>Telegram</b>
+        <div class="sub" style="margin:4px 0 0">DM your bot <code>/link <span id="pair">······</span></code> to get alerts and shared cards. Add it to a group to see $TICKER mentions on the glasses.</div>
+      </section>
+
+      <section><b>Activity</b><ul id="log"></ul></section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

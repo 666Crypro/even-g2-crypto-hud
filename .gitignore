@@ -1,0 +1,10 @@
+node_modules/
+dist/
+*.ehpk
+.env
+.env.*
+!.env.example
+server/data/
+.stt/
+__pycache__/
+*.log

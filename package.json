@@ -1,0 +1,17 @@
+{
+  "name": "even-g2-crypto-hud",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Heads-Up Desk: a glanceable crypto HUD for Even Realities G2 (Hyperliquid, Polymarket, Telegram, Trust Wallet).",
+  "license": "MIT",
+  "scripts": {
+    "setup": "npm --prefix server install && npm --prefix app install",
+    "server": "npm --prefix server start",
+    "demo": "npm --prefix server run demo",
+    "app": "npm --prefix app run dev",
+    "sim": "evenhub-simulator http://localhost:5173",
+    "sim:demo-mic": "evenhub-simulator 'http://localhost:5173/?demoMic'",
+    "test": "npm --prefix server test",
+    "pack": "npm --prefix app run pack"
+  }
+}

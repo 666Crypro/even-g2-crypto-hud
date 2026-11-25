@@ -1,0 +1,22 @@
+{
+  "name": "even-g2-crypto-hud-server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "dev": "tsx watch src/server.ts",
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "demo": "TG_DEMO=1 HL_WATCH_ADDRESS=0x010461c14e146ac35fe42271bdc1134ee31c703a WALLET_ADDRESS=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 tsx src/server.ts"
+  },
+  "dependencies": {
+    "@nktkas/hyperliquid": "^0.33.3",
+    "tsx": "^4.23.0",
+    "viem": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}
