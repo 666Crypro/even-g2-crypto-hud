@@ -10,7 +10,7 @@
 **Tracks:** Main: **02 · Crypto & DeFi** (Hyperliquid, Polymarket, Trust Wallet). Second: **01 · Messaging & News** (Telegram). Also entering **Best Telegram integration**.
 
 **Repo:** https://github.com/666Crypro/even-g2-crypto-hud
-**Demo video (≤3 min):** [YouTube/Loom link]
+**Demo video (≤3 min):** [YouTube/Loom link] — upload `docs/demo.mp4` (1:52, 1080p, already produced; do not need to re-record unless you want a live mic).
 **Team:** Arthur Shavlovsky (solo) · [Telegram/X handle]
 **How did you hear about this hackathon?** [community name, which counts toward the Community Partner Award]
 

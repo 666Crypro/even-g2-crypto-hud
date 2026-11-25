@@ -7,7 +7,9 @@ Built for **Heads Up: Even Realities Hackathon** (TVM Ventures × Daos Hub, Nov 
 
 ![Heads-Up Desk running in the Even Hub simulator](docs/demo.gif)
 
-*Every frame above is the real 576×288 G2 framebuffer, captured headless from `evenhub-simulator` 0.9.5 through its automation API (`scripts/sim.py tour`).*
+**[2-minute demo — 1080p MP4](docs/demo.mp4)** (1:52, H.264). Recorded from the Even Hub simulator, with captions and narration. Voice segments are labeled **SIMULATED MIC INPUT**.
+
+*The GIF and the video use the real 576×288 G2 framebuffer, captured headless from `evenhub-simulator` 0.9.5 through its automation API (`scripts/sim.py tour` / `scripts/demo-video.py`).*
 
 ---
 
