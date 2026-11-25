@@ -87,6 +87,11 @@ def font(size: int, weight: int = 500) -> ImageFont.FreeTypeFont:
         path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if weight >= 600 else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
         return ImageFont.truetype(path, size)
 
+# Static DejaVu for title/end cards so "Realities" and other words stay unambiguous.
+def card_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
+    path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+    return ImageFont.truetype(path, size)
+
 
 # ---------- recorder ----------
 class Recorder:
@@ -455,47 +460,94 @@ def compose_frame(hud: Image.Image, kicker: str, caption: str, badge: str, panel
 def title_card() -> Image.Image:
     canvas = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(canvas)
-    d.text((64, 36), "HEADS-UP DESK", fill=MUTED, font=font(22, 600))
-    # big title
+    d.text((64, 36), "HEADS-UP DESK", fill=MUTED, font=card_font(22, True))
     y = 320
-    d.text((120, y), "A crypto trading desk", fill=WHITE, font=font(72, 700))
-    d.text((120, y + 92), "you wear.", fill=GREEN, font=font(72, 700))
-    d.text((120, y + 220), "Hyperliquid  ·  Polymarket  ·  Telegram  ·  Trust Wallet", fill=DIM, font=font(26, 500))
-    d.text((120, y + 270), "Even Realities G2  ·  Crypto & DeFi  ·  Best Telegram", fill=MUTED, font=font(22, 500))
-    d.text((120, H - 90), "github.com/666Crypro/even-g2-crypto-hud", fill=GREEN, font=font(22, 600))
+    d.text((120, y), "A crypto trading desk", fill=WHITE, font=card_font(72, True))
+    d.text((120, y + 92), "you wear.", fill=GREEN, font=card_font(72, True))
+    d.text((120, y + 220), "Hyperliquid  ·  Polymarket  ·  Telegram  ·  Trust Wallet", fill=DIM, font=card_font(26))
+    d.text((120, y + 270), "Even Realities G2  ·  Crypto & DeFi  ·  Best Telegram", fill=MUTED, font=card_font(22))
+    d.text((120, H - 90), "github.com/666Crypro/even-g2-crypto-hud", fill=GREEN, font=card_font(22, True))
     return canvas
 
 def end_card() -> Image.Image:
     canvas = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(canvas)
-    d.text((120, 280), "HEADS-UP DESK", fill=GREEN, font=font(28, 700))
-    d.text((120, 340), "Read at a glance.", fill=WHITE, font=font(64, 700))
-    d.text((120, 422), "Act with a tap or a phrase.", fill=WHITE, font=font(64, 700))
-    d.text((120, 530), "Paper and testnet only  ·  your funds stay in your wallet", fill=DIM, font=font(26, 500))
-    d.text((120, 680), "github.com/666Crypro/even-g2-crypto-hud", fill=GREEN, font=font(32, 650))
-    d.text((120, 740), "Heads Up: Even Realities Hackathon  ·  Nov 2026", fill=MUTED, font=font(20, 500))
+    d.text((120, 280), "HEADS-UP DESK", fill=GREEN, font=card_font(28, True))
+    d.text((120, 340), "Read at a glance.", fill=WHITE, font=card_font(64, True))
+    d.text((120, 422), "Act with a tap or a phrase.", fill=WHITE, font=card_font(64, True))
+    d.text((120, 530), "Paper and testnet only  ·  your funds stay in your wallet", fill=DIM, font=card_font(26))
+    d.text((120, 680), "github.com/666Crypro/even-g2-crypto-hud", fill=GREEN, font=card_font(32, True))
+    d.text((120, 740), "Heads Up: Even Realities Hackathon  ·  Nov 2026", fill=MUTED, font=card_font(24))
     return canvas
 
 def fade(a: Image.Image, b: Image.Image, t: float) -> Image.Image:
     return Image.blend(a.convert("RGB"), b.convert("RGB"), max(0.0, min(1.0, t)))
 
 
-# Actual timestamps from the recorded tour (seconds from first raw frame).
-# VO clips are laid onto these cues; remaining time is silence so visuals can finish.
+# Source-time keep ranges (seconds from the first raw frame). Silences in the
+# gaps are trimmed to ~1s each so the voiceover stays tight.
+KEEP = [
+    (0.00, 26.90),    # title + markets + swipe + 1s on Telegram
+    (30.30, 42.30),   # drafted reply, confirm, 1s of the sent panel
+    (49.50, 72.40),   # voice alert + paper long + 1s of the fill
+    (78.30, 105.20),  # bet / cancel, alert hit, context menu
+]
+
+def _segments():
+    segs, t = [], 0.0
+    for a, b in KEEP:
+        segs.append((t, t + (b - a), a))
+        t += b - a
+    return segs, t
+
+OUT_SEGS, KEPT_DUR = _segments()
+
+def out_to_src(t: float) -> float:
+    for o0, o1, s0 in OUT_SEGS:
+        if o0 <= t < o1:
+            return s0 + (t - o0)
+    return KEEP[-1][1]
+
+# Voiceover cues in OUTPUT time (after silence trims).
 CUES = [
-    # (vo_name, start_time)
-    ("1", 0.00),    # title + markets
-    ("2", 8.30),    # swipe through cards, lands on Telegram
-    ("3", 30.30),   # one-tap drafted reply
-    ("4", 49.50),   # "just say it" — alert, then paper long
-    ("5", 78.30),   # polymarket bet + double-tap cancel
-    ("6", 92.30),   # alert hit, Telegram DM
-    ("7", 100.80),  # menu, then end card
+    ("1", 0.00),     # title + markets
+    ("2", 8.30),     # swipe
+    ("3", 26.90),    # telegram reply  (was 30.30)
+    ("4", 38.90),    # voice commands  (was 49.50)
+    ("5", 61.80),    # polymarket bet   (was 78.30)
+    ("6", 75.80),    # alert hit        (was 92.30)
+    ("7", 84.30),    # menu + end card  (was 100.80)
 ]
 TITLE_HOLD = 5.0
-TITLE_FADE = 0.9
-END_AT = 105.2          # fade off the last recorded menu frames
-VIDEO_END = 112.50      # after VO 7 (11.34s from 100.80)
+FADE_THRU = 0.30       # fade to/from black so cards never superimpose
+FADE_BLACK = 0.15
+END_AT = KEPT_DUR       # ~88.70s — last kept menu frame
+# VO 7 is 7.92s starting at 84.30 → 92.22; hold the end card a beat after.
+VIDEO_END = 92.80
+
+
+def clean_menu_hud(hud: Image.Image) -> Image.Image:
+    """If a full-height G2 contextual-menu border is present, black out leftover pixels to its right.
+
+    The Even Hub simulator sometimes leaves the previous card's text visible beside the menu.
+    """
+    im = hud.convert("RGB")
+    pixels = im.load()
+    w, h = im.size
+    best_x, best = 0, 0
+    for x in range(160, min(360, w)):
+        score = 0
+        for y in range(h):
+            r, g, b = pixels[x, y]
+            if g > 160 and g > r + 30 and g > b + 30:
+                score += 1
+        if score > best:
+            best, best_x = score, x
+    if best >= 200 and 200 <= best_x <= 320:
+        out = im.copy()
+        ImageDraw.Draw(out).rectangle((best_x + 1, 0, w, h), fill=(0, 0, 0))
+        return out
+    return im
 
 
 def vo_duration(path: Path) -> float:
@@ -505,16 +557,12 @@ def vo_duration(path: Path) -> float:
 
 
 def build_narration() -> Path:
-    """Lay each VO clip at its cue time, with silence in between, up to VIDEO_END."""
+    """Lay each VO clip at its (output-time) cue, with silence in between, up to VIDEO_END."""
     WORK.mkdir(parents=True, exist_ok=True)
-    # Build a 22050 Hz mono timeline with anullsrc + adelay / amix is messy;
-    # instead concat: silence-to-cue, clip, silence-to-next-cue, ...
-    cues = list(CUES)
     pieces: list[Path] = []
 
     def silence(dur: float, name: str) -> Path:
         out = WORK / f"sil_{name}.wav"
-        # a tiny epsilon so ffmpeg never gets a 0-length input
         dur = max(0.02, dur)
         subprocess.check_call(
             ["ffmpeg", "-y", "-f", "lavfi", "-i", "anullsrc=r=22050:cl=mono", "-t", f"{dur:.3f}",
@@ -532,7 +580,7 @@ def build_narration() -> Path:
         return out
 
     t = 0.0
-    for i, (name, start) in enumerate(cues):
+    for name, start in CUES:
         if start - t > 0.02:
             pieces.append(silence(start - t, f"pre{name}"))
             t = start
@@ -553,6 +601,28 @@ def build_narration() -> Path:
     return out
 
 
+def rebuild_gif() -> Path:
+    """Regenerate docs/demo.gif from the existing GIF, with the stale menu frame cleaned."""
+    src = ROOT / "docs" / "demo.gif"
+    gif = Image.open(src)
+    frames = []
+    # HUD is pasted at (20, 20) into a 616x360 canvas (see scripts/sim.py).
+    box = (20, 20, 20 + 576, 20 + 288)
+    for i in range(gif.n_frames):
+        gif.seek(i)
+        fr = gif.convert("RGB")
+        hud = fr.crop(box)
+        cleaned = clean_menu_hud(hud)
+        if cleaned.tobytes() != hud.convert("RGB").tobytes():
+            print(f"  cleaned gif frame {i}")
+            fr.paste(cleaned, box[:2])
+        frames.append(fr)
+    out = ROOT / "docs" / "demo.gif"
+    frames[0].save(out, save_all=True, append_images=frames[1:], duration=2200, loop=0, optimize=True)
+    print("gif:", out, out.stat().st_size)
+    return out
+
+
 def compose() -> Path:
     WORK.mkdir(parents=True, exist_ok=True)
     frames_dir = WORK / "out"
@@ -565,21 +635,24 @@ def compose() -> Path:
         raise SystemExit("no raw frames — run record first")
     n_raw = len(raws)
     rec_dur = n_raw / FPS
-    print(f"compose: {n_raw} raw frames, {rec_dur:.1f}s recorded, video end {VIDEO_END:.1f}s")
+    print(f"compose: {n_raw} raw frames, {rec_dur:.1f}s recorded, kept {KEPT_DUR:.1f}s, video end {VIDEO_END:.1f}s")
 
     title = title_card()
     end = end_card()
+    black = Image.new("RGB", (W, H), BG)
 
-    def raw_at(t: float):
-        idx = int(round(t * FPS))
+    def raw_at(src_t: float):
+        idx = int(round(src_t * FPS))
         idx = max(0, min(n_raw - 1, idx))
         img = Image.open(raws[idx]).convert("RGB")
         meta_p = raws[idx].with_suffix(".json")
         meta = json.loads(meta_p.read_text()) if meta_p.exists() else {}
+        if (meta.get("kicker") or "") == "MENU":
+            img = clean_menu_hud(img)
         return img, meta
 
-    def live_at(t: float) -> Image.Image:
-        hud, meta = raw_at(t)
+    def live_at(out_t: float) -> Image.Image:
+        hud, meta = raw_at(out_to_src(out_t))
         return compose_frame(
             hud,
             meta.get("kicker") or "",
@@ -589,6 +662,16 @@ def compose() -> Path:
             "",
         )
 
+    def thru_black(a: Image.Image, b: Image.Image, dt: float) -> Image.Image:
+        """dt seconds into a fade-out / black / fade-in of duration 2*FADE_THRU+FADE_BLACK."""
+        if dt < FADE_THRU:
+            return fade(a, black, dt / FADE_THRU)
+        if dt < FADE_THRU + FADE_BLACK:
+            return black
+        u = (dt - FADE_THRU - FADE_BLACK) / FADE_THRU
+        return fade(black, b, u)
+
+    TRANS = 2 * FADE_THRU + FADE_BLACK  # 0.75s
     total_frames = int(round(VIDEO_END * FPS))
     t0 = time.time()
     last_live = None
@@ -596,19 +679,17 @@ def compose() -> Path:
         t = i / FPS
         if t < TITLE_HOLD:
             frame = title
-        elif t < TITLE_HOLD + TITLE_FADE:
-            live = live_at(t)
-            last_live = live
-            frame = fade(title, live, (t - TITLE_HOLD) / TITLE_FADE)
+        elif t < TITLE_HOLD + TRANS:
+            frame = thru_black(title, live_at(t), t - TITLE_HOLD)
+            last_live = live_at(t)
         elif t < END_AT:
             frame = live_at(t)
             last_live = frame
+        elif t < END_AT + TRANS:
+            frame = thru_black(last_live or live_at(END_AT - 0.05), end, t - END_AT)
         else:
-            live = last_live or live_at(END_AT - 0.05)
-            fade_t = (t - END_AT) / TITLE_FADE
-            frame = end if fade_t >= 1 else fade(live, end, fade_t)
-        if isinstance(frame, Image.Image):
-            frame.convert("RGB").save(frames_dir / f"{i:05d}.png")
+            frame = end
+        frame.convert("RGB").save(frames_dir / f"{i:05d}.png")
         if i % 60 == 0:
             print(f"  composed {i}/{total_frames} ({t:.1f}s)")
 
@@ -631,6 +712,7 @@ def compose() -> Path:
     size = OUT_MP4.stat().st_size
     dur = vo_duration(OUT_MP4)
     print(f"wrote {OUT_MP4}  {dur:.2f}s  {size/1e6:.1f} MB")
+    rebuild_gif()
     return OUT_MP4
 
 
